@@ -40,17 +40,19 @@ load_dotenv(dotenv_path=ENV_PATH)
 
 def _setup_logging() -> logging.Logger:
     """Configure quiet application logging."""
-    LOG_DIR.mkdir(parents=True, exist_ok=True)
-    log_path = LOG_DIR / f"multiusers_{datetime.now().strftime('%Y%m%d')}.log"
-
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(logging.WARNING)
 
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setFormatter(fmt)
-    root.addHandler(file_handler)
+    try:
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log_path = LOG_DIR / f"multiusers_{datetime.now().strftime('%Y%m%d')}.log"
+        handler: logging.Handler = logging.FileHandler(log_path, encoding="utf-8")
+    except OSError:
+        handler = logging.StreamHandler()
+    handler.setFormatter(fmt)
+    root.addHandler(handler)
 
     for name in ("httpx", "httpcore", "openai", "supabase", "postgrest"):
         logging.getLogger(name).setLevel(logging.WARNING)
